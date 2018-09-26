@@ -7,10 +7,16 @@
 <body>
 <h1>Annotator Demo</h1>
 
-
-<div class="annotator">
 <h2>Instructions</h2>
 <p><a href="https://github.com/RichCaloggero/annotator/">See README for instructions.</a></p>
+
+<div class="annotator" role="region" aria-label="Annotator">
+<div class="controls">
+<button id="toggleAnnotator" aria-pressed="false">annotate</button>
+<button id="toggleTextChange" aria-pressed="false">change text</button>
+<button id="save">save project</button>
+<button id="restore">restore project</button>
+</div><!-- controls -->
 
 <div class="text" role="textbox" tabindex="0" aria-multiline="true">
 		    <div id="node-start">Project Gutenberg's The Spirit of Japan, by Sir Rabindranath Tagore<br></div>
@@ -24,12 +30,9 @@
         </div><!-- .text -->
 
 <div id="message" aria-live="polite"></div>
-
-<div class="controls">
-<button id="toggleEditing" aria-pressed="false">edit</button>
+<hr>
 <ul id="annotations"></ul>
 
-</div><!-- .controls -->
 </div><!-- .annotator -->
 
 <script>
@@ -38,9 +41,11 @@ const $$ = document.querySelectorAll.bind(document);
 
 const annotator = $(".annotator");
 const text = annotator.querySelector(".text");
-const textBlocks = text.querySelectorAll("div");
 const controls = $(".controls");
-const toggleEditing = $("#toggleEditing");
+const toggleAnnotator = $("#toggleAnnotator");
+const toggleTextChange = $("#toggleTextChange");
+const save = $("#save");
+const restore = $("#restore");
 const annotations = $("#annotations");
 const annotationMap = new WeakMap();
 
