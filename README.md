@@ -2,7 +2,7 @@
 
 This is an attempt at an accessible annotation scheme.
 
-[Demo](https://RichCaloggero.github.io/annotator.git/annotator.html)
+[Try the demo.](https://RichCaloggero.github.io/annotator/annotator.html)
 
 ## Instructions
 
