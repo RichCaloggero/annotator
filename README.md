@@ -2,7 +2,9 @@
 
 This is an attempt at an accessible annotation scheme.
 
-[Demo](https://github.io/annotator.git/annotator.html)
+[Demo](https://RichCaloggero.github.io/annotator.git/annotator.html)
+
+## Instructions
 
 1. click the "edit" button to enable editing
 2. Put focus on the text via tab, find the start of text to be annotated and press the "*" (asterisk) key. A message will appear showing that you have successfully marked the start of the annotation.
