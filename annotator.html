@@ -49,25 +49,29 @@ const restore = $("#restore");
 const annotations = $("#annotations");
 const annotationMap = new WeakMap();
 
+/// variables
 let seenStart = false;
+let changeText = false;
 
-toggleEditing.addEventListener ("click", (e) => e.target.setAttribute("aria-pressed", _toggleEditing()));
+toggleAnnotator.addEventListener ("click", (e) => {
+const annotator = _toggleAnnotator();
+e.target.setAttribute("aria-pressed", annotator);
+if (!annotator && changeText) toggleTextChange.setAttribute("aria-pressed", _toggleTextChange());
+});
+
+toggleTextChange.addEventListener ("click", (e) => {
+const change = _toggleTextChange();
+e.target.setAttribute("aria-pressed", change);
+if (change && !text.isContentEditable) toggleAnnotator.setAttribute("aria-pressed", _toggleAnnotator());
+});
+
 text.addEventListener("keydown", filterKeys);
 text.addEventListener("keyup", setAnnotationMode);
 annotations.addEventListener("click", (e) => goToAnnotation(e.target));
 
-function _toggleEditing () {
-editable = !text.isContentEditable;
-text.contentEditable = editable;
-message (editable?
-"Editing enabled."
-: "Editing disabled."
-);
-
-return editable;
-} // toggleEditing 
 
 function filterKeys (e) {
+if (changeText) return true;
 const key = e.key;
 switch (key) {
 case "*": case "ArrowUp": case "ArrowDown": case "ArrowLeft": case "ArrowRight":
@@ -156,6 +160,28 @@ s.removeAllRanges();
 s.addRange(range);
 annotator.focus();
 } // goToAnnotation
+
+
+function _toggleAnnotator () {
+editable = !text.isContentEditable;
+text.contentEditable = editable;
+message (editable?
+"Editing enabled."
+: "Editing disabled."
+);
+
+return editable;
+} // _toggleEditing 
+
+function _toggleTextChange () {
+changeText = !changeText;
+message (changeText?
+"Text modification enabled."
+: "Text modification disabled."
+);
+
+return changeText;
+} // _toggleTextChange
 
 function copySelection (selection) {
 const copy = {
