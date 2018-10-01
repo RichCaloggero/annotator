@@ -12,14 +12,14 @@
 
 <div class="annotator" role="region" aria-label="Annotator">
 <div class="controls">
-<div>
-<h2><label>Project: <input type="text" id="project"></label></h2>
+<div role="region" aria-label="Project">
+<h2 id="projectName"></h2>
+<label>Project: <input type="text" id="project"></label>
 
 <button id="restore" accesskey="r">restore project</button>
-<label>Project: <select id="projects"></select></label>
+<label>Load Project: <select id="projects"></select></label>
 <button id="save" accesskey="s">Save Project</button>
 <button id="delete" accesskey="d">Delete Project</button>
-</div><div>
 </div><div>
 <label>Note: <input type="text" id="note" accesskey="n"></label>
 <button id="addNote">Add Note</button>
@@ -76,7 +76,7 @@ addNote(annotation, $("#note").value)
 displayAnnotation(annotation, annotationMap.get(annotation));
 });
 
-$("#projects").addEventListener("change", e => loadProject(e.target.value));
+$("#projects").addEventListener("change", e => project = loadProject(findProject(e.target.value)));
 $("#save").addEventListener("click", () => saveProject(project));
 
 $("#enableAnnotator").addEventListener ("click", (e) => {
@@ -91,10 +91,22 @@ compensateForNVDAAccessKeyBug (e.target);
 });
 
 
+/// init
+
+// create a project
+project = createProject();
+
 /// load default text
 fetch("default.txt")
 .then(response => response.text())
 .then(_text => {
+if (! text || !text.textContent) {
+message ("No default text.");
+$("#enableTextModification").checked = true;
+text.textContent = project.text = "";
+return;
+} // if
+
 text.textContent = _text;
 project.text = text.textContent;
 message("default text loaded.");
@@ -146,7 +158,15 @@ const r = removeMarkers(start, end);
 s.removeAllRanges();
 s.addRange(r);
 
-annotation = displayAnnotation(addAnnotation(createAnnotation(s.toString(), r, project.annotations)));
+const newAnnotation = addAnnotation(createAnnotation(s.toString(), r), project.annotations);
+if (newAnnotation) {
+annotation = newAnnotation;
+loadAnnotations(project.annotations);
+displayAnnotation(annotation, document.createElement("li"));
+
+} else {
+message("Cannot create annotation.");
+} // if
 
 function removeMarkers (_start, _end) {
 const start = _start.anchorNode;
@@ -182,7 +202,7 @@ return s;
 /// annotation list
 
 function addAnnotation (annotation, list) {
-list = list.concat(annotation);
+list.push(annotation);
 return annotation;
 }// addAnnotation
 
@@ -230,6 +250,19 @@ annotator.focus();
 return annotation;
 } // displayAnnotation
 
+/// projects
+
+function createProject (name) {
+return {
+name: name,
+annotations: [],
+};
+} // createProject
+
+function findProject (name) {
+return localStorage[name] || null;
+} // findProject
+
 function saveProject (p) {
 updateProject(p);
 
@@ -259,12 +292,15 @@ return null;
 } // restoreProject
 
 function loadProject (p) {
+if (! p) return null;
+
 saveProject(p);
 loadAnnotations(p.annotations);
 return p;
 } // loadProject
 
-function loadAnnotations (list, annotations) {
+function loadAnnotations (list) {
+annotations.innerHTML = "";
 list.forEach(annotation => {
 annotations.appendChild(
 createAnnotationListItem (annotation, document.createElement("li")) // loadAnnotation
