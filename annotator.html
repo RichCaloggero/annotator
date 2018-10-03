@@ -10,7 +10,7 @@
 <h2>Instructions</h2>
 <p><a href="https://github.com/RichCaloggero/annotator/">See README for instructions.</a></p>
 
-<div class="annotator" role="region" aria-label="Annotator">
+<div id="annotator" role="region" aria-label="Annotator">
 <div class="controls">
 <div role="region" aria-label="Project">
 <h2 id="projectName"></h2>
@@ -62,21 +62,21 @@ const projects = $("#projects");
 /// variables
 let start = null;
 let project = {};
-let annotation = {};
+let annotation = null;
 
 /// listen for events
 
 $("#text").addEventListener("keydown", filterKeys);
 $("#text").addEventListener("keyup", setAnnotationMode);
 
-$("#annotations").addEventListener("click", e => annotation = loadAnnotation(annotationMap.get(e.target.closest(".annotation"), project.annotations)));
+$("#annotations").addEventListener("click", e => annotation = displayAnnotation(annotationMap.get(e.target.closest(".annotation"))));
 
 $("#addNote").addEventListener("click", () => {
 addNote(annotation, $("#note").value)
 displayAnnotation(annotation, annotationMap.get(annotation));
 });
 
-$("#projects").addEventListener("change", e => project = loadProject(findProject(e.target.value)));
+$("#restore").addEventListener("click", e => project = restoreProject($("#projects").value));
 $("#save").addEventListener("click", () => saveProject(project));
 
 $("#enableAnnotator").addEventListener ("click", (e) => {
@@ -93,6 +93,7 @@ compensateForNVDAAccessKeyBug (e.target);
 
 /// init
 
+createProjectList(localStorage, $("#projects"));
 // create a project
 project = createProject();
 
@@ -100,15 +101,14 @@ project = createProject();
 fetch("default.txt")
 .then(response => response.text())
 .then(_text => {
-if (! text || !text.textContent) {
+if (!$("#text") || !text.textContent) {
 message ("No default text.");
 $("#enableTextModification").checked = true;
-text.textContent = project.text = "";
+text.innerHTML = project.text = "";
 return;
 } // if
 
-text.textContent = _text;
-project.text = text.textContent;
+project.text = displayText(_text, $("#text"));
 message("default text loaded.");
 });
 
@@ -161,8 +161,7 @@ s.addRange(r);
 const newAnnotation = addAnnotation(createAnnotation(s.toString(), r), project.annotations);
 if (newAnnotation) {
 annotation = newAnnotation;
-loadAnnotations(project.annotations);
-displayAnnotation(annotation, document.createElement("li"));
+createAnnotationListItem(annotation, $("#annotations").appendChild(document.createElement("li")));
 
 } else {
 message("Cannot create annotation.");
@@ -220,9 +219,111 @@ notes: []
 
 
 function addNote (annotation, text) {
+if (!annotation) {
+message("No current annotation.");
+return "";
+} // if
+
 annotation.notes.push(text);
+createAnnotationListItem (annotation, annotationMap.get(annotation));
 return text;
 } // addNote
+
+function displayText (text, element) {
+element.innerHTML = "";
+element.appendChild(document.createTextNode(text));
+return text;
+} // displayText
+
+function displayAnnotation (annotation) {
+const r = annotation.range;
+console.log("displayAnnotation: ", r);
+const range = new Range();
+range.setStart(r.startContainer, r.startOffset);
+range.setEnd(r.endContainer, r.endOffset);
+const s = getSelection();
+s.removeAllRanges();
+s.addRange(range);
+$("#text").focus();
+return annotation;
+} // displayAnnotation
+
+/// projects
+
+
+function createProject (name) {
+return {
+name: name,
+annotations: [],
+};
+} // createProject
+
+function findProject (name) {
+return localStorage[name] || null;
+} // findProject
+
+function createProjectList (projects, element) {
+element.innerHTML = '<option>--Select Project--</option>';
+Object.keys(projects).forEach(key => {
+const option = document.createElement ("option");
+option.textContent = key;
+element.add(option);
+});
+} // createProjectList
+
+function saveProject (project) {
+updateProject(project);
+
+try {
+if (!project.name) {
+$("#project").focus();
+throw new Error("Project has no name; type a name and try save again.");
+} // if
+
+const p = Object.assign ({}, project);
+p.annotations = p.annotations.map(x => {
+x.range = cloneRange(x.range);
+return x;
+});
+const json = JSON.stringify(p);
+localStorage[p.name] = json;
+} catch (e) {
+message(e);
+console.log(e);
+} // catch
+
+return project;
+} // saveProject
+
+function restoreProject (name) {
+message (`restoring ${name}:`);
+try {
+const p = JSON.parse(localStorage.getItem(name));
+p.annotations.forEach(x => x.range = restoreRange(x.range, $("#text").firstChild));
+displayText(p.text, $("#text"));
+message ("Done.");
+createAnnotationList(p.annotations);
+return p;
+
+} catch (e) {
+message(e);
+console.log(e);
+return null;
+} // catch
+
+} // restoreProject
+
+
+function createAnnotationList (list) {
+const annotationList = $("#annotations");
+annotationList.innerHTML = "";
+list.forEach(annotation => {
+annotationList.appendChild(
+createAnnotationListItem (annotation, document.createElement("li"))
+); // appendChild
+}); // forEach
+return annotationList;
+} // createAnnotationList
 
 function createAnnotationListItem (annotation, element) {
 if (! element) return null;
@@ -236,87 +337,37 @@ ${annotation.notes.map(note => `<li class="note">${note}</li>`).join("\n")}
 annotationMap.set(element, annotation);
 annotationMap.set(annotation, element);
 return element;
-} // displayAnnotation
+} // createAnnotationListItem
 
-function displayAnnotation (annotation) {
-const r = annotation.range;
-const range = new Range();
-range.setStart(r.startContainer, r.startOffset);
-range.setEnd(r.endContainer, r.endOffset);
-const s = getSelection();
-s.removeAllRanges();
-s.addRange(range);
-annotator.focus();
-return annotation;
-} // displayAnnotation
-
-/// projects
-
-function createProject (name) {
-return {
-name: name,
-annotations: [],
-};
-} // createProject
-
-function findProject (name) {
-return localStorage[name] || null;
-} // findProject
-
-function saveProject (p) {
-updateProject(p);
-
-try {
-if (! p.name && !confirm("Project has no name; abort project?")) return;
-
-const json = JSON.stringify(p);
-localStorage[p.name] = json;
-} catch (e) {
-message(e);
-console.log(e);
-} // catch
-
-return p;
-} // saveProject
-
-function restoreProject (name) {
-try {
-let s = localStorage;
-return JSON.parse(localStorage[name]);
-} catch (e) {
-message(e);
-console.log(e);
-} // catch
-
-return null;
-} // restoreProject
-
-function loadProject (p) {
-if (! p) return null;
-
-saveProject(p);
-loadAnnotations(p.annotations);
-return p;
-} // loadProject
-
-function loadAnnotations (list) {
-annotations.innerHTML = "";
-list.forEach(annotation => {
-annotations.appendChild(
-createAnnotationListItem (annotation, document.createElement("li")) // loadAnnotation
-); // appendChild
-}); // forEach
-return annotations;
-} // loadAnnotations
 
 function updateProject (project) {
-project.name = $("project").value;
-project.text = text.textContent;
-project.annotations = annotations;
-
+project.name = $("#project").value;
+project.text = $("#text").textContent;
 } // updateProject
 
 /// utilities
+
+function cloneRange (r) {
+if (r.startContainer !== r.endContainer) {
+message ("Cannot clone / save a range whose start and end nodes are not the same!");
+return {};
+} // if
+
+return {
+startOffset: r.startOffset,
+endOffset: r.endOffset
+};
+} // cloneRange
+
+function restoreRange (r, node) {
+console.log ("restoreRange: ", r);
+return {
+startContainer: node,
+endContainer: node,
+startOffset: Number(r.startOffset),
+endOffset: Number(r.endOffset)
+};
+} // restoreRange
 
 function copySelection (selection) {
 const copy = {
@@ -330,14 +381,12 @@ return copy;
 } // copySelection
 
 function copyRange (r) {
-const copy = {
+return {
 startContainer: r.startContainer,
 startOffset: r.startOffset,
 endContainer: r.endContainer,
 endOffset: r.endOffset,
 };
-//console.log ("copy: ", copy);
-return copy;
 } // copyRange
 
 function probeEvent (type, element = document.body) {
