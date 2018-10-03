@@ -3,14 +3,22 @@
 <head>
 <meta charset="utf-8">
 <title>Annotator Demo</title>
+<style>
+#annotator {position: relative;}
+#annotator #controls {display: absolute; top: 0%; height: 10%;}
+#annotator #message {display: absolute; bottom: 0%; height: 5%;}
+#annotator #text-container {display: absolute; top: 10%; height: 85%;}
+#annotator #text-container #annotations {position: relative; float: left; width: 30%;}
+#annotator #text-container #text {position: relative; float: right; width: 70%; overflow: scroll;}
+</style>
 </head>
 <body>
+<div id="annotator" role="region" aria-label="Annotator">
 <h1>Annotator Demo</h1>
 
 <h2>Instructions</h2>
 <p><a href="https://github.com/RichCaloggero/annotator/">See README for instructions.</a></p>
 
-<div id="annotator" role="region" aria-label="Annotator">
 <div class="controls">
 <div role="region" aria-label="Project">
 <h2 id="projectName"></h2>
@@ -30,13 +38,13 @@
 </div><!-- controls -->
 <hr>
 
-<div class="container">
+<div id="text-container">
 <ul id="annotations"></ul>
 
 <div contenteditable="true" id="text" role="textbox" tabindex="0" aria-multiline="true" accesskey="t"
 style="white-space: pre-wrap;">
 </div><!-- .text -->
-</div><!-- .container -->
+</div><!-- #text-container -->
 
 <hr>
 <div id="message" aria-live="polite"></div>
