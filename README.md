@@ -2,6 +2,10 @@
 
 This is an attempt at an accessible annotation scheme.
 
+## Motovation
+
+Visually annotating text is straightforward: draw each annotation in a style which stands out / is different from the surrounding text.  However, how does one do this in a way which supports screen readers? The only way I can think of is to surround the text to be annotated with some sort of marker. The issue of course is that if this marker also appears in the text to be annotated, the results will not be as the user expects.
+
 Try the demo:
 https://RichCaloggero.github.io/annotator/annotator.html
 
@@ -20,4 +24,12 @@ You can change the text if you click the "enable text modification" checkbox.
 
 You can add notes to whichever annotation is currently being displayed.
 
-Eventually, you will be able to save the text, along with all associated annotations, together as a project.
+## Real world implementation
+
+- we need to support user defined markers
+- need to check to see if the marker exists in the text
+- need to store the markers with the project and not let the user add them as part of the text
+- need to be able to toggle their appearance within the text on demand
+   + currently they are removed when an annotation is created and added to the list
+   + clicking an annotation in the list jumps you to the correct spot in the text
+   + toggling on inline annotations would insert them into the text so the user can hear annotations in context (not currently implemented)
