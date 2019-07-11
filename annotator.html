@@ -5,11 +5,11 @@
 <title>Annotator Demo</title>
 <style>
 /*#annotator {position: relative;}
-#annotator #controls {display: absolute; top: 0%; height: 10%;}
-#annotator #message {display: absolute; bottom: 0%; height: 5%;}
-#annotator #text-container {display: absolute; top: 10%; height: 85%;}
-#annotator #text-container #annotations {position: absolute; left: 0; right: 30%; top: 0; bottom: 0;}
-#annotator #text-container #text {position: absolute; right: 0; left: 30%; overflow: scroll; top: 0; bottom: 0;}
+#annotator #controls {display: absolute; top: 0%; bottom: 90%; height: 10%; left: 0; right: 0; width: 100%;}
+#annotator #message {display: absolute; bottom: 0%; height: 5%; top: 95%; left: 0; right: 0; width: 100%;}
+#annotator #text-container {display: absolute; top: 10%; bottom: 5%; height: 85%; left: 0; right: 0; width: 100%;}
+#annotator #text-container #annotations {position: absolute; top: 0; bottom: 0; height: 100%; left: 0; right: 70%; width: 30%;}
+#annotator #text-container #text {position: absolute; top: 0; bottom: 0; height: 100%; left: 30%; right: 0;  width: 70%; overflow: scroll; }
 */
 </style>
 </head>
@@ -20,7 +20,7 @@
 <h2>Instructions</h2>
 <p><a href="https://github.com/RichCaloggero/annotator/">See README for instructions.</a></p>
 
-<div class="controls">
+<div id="controls">
 <div role="region" aria-label="Project">
 <h2 id="projectName"></h2>
 <label>Project: <input type="text" id="project"></label>
@@ -407,6 +407,18 @@ element.addEventListener(e => message(
 function message (text) {
 $("#message").textContent = text;
 } // message
+
+/// debugging
+
+function dim (element) {
+const s = getComputedStyle(element);
+console.log(`${s.width}, ${s.height}, ${s.top}, ${s.left}`);
+} // dim
+
+function pos (element) {
+const s = getComputedStyle(element);
+console.log(`${s.top}, ${s.bottom}, ${s.left}, ${s.right}`);
+} // pos
 
 </script>
 
